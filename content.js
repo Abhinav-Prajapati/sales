@@ -6,14 +6,45 @@
 let intervalId;
 let totalModified = 0;
 
+const TOTAL_COURSE_HOURS = 40;
+const DEFAULT_COMPLETION_PERCENT = 84; // number 0-100
+
+function computeTimeLeft(percent) {
+  const remainingFraction = (100 - percent) / 100;
+  let remainingHoursFloat = TOTAL_COURSE_HOURS * remainingFraction;
+  let hours = Math.floor(remainingHoursFloat);
+  let minutes = Math.round((remainingHoursFloat - hours) * 60);
+
+  minutes = Math.round(minutes / 5) * 5;
+  if (minutes === 60) {
+    hours += 1;
+    minutes = 0;
+  }
+
+  const hrsLabel = hours === 1 ? 'hr' : 'hrs';
+  const minsLabel = minutes === 1 ? 'min' : 'mins';
+
+  if (hours === 0 && minutes === 0) {
+    return `0 ${minsLabel} left`;
+  }
+  if (hours === 0) {
+    return `~ ${minutes} ${minsLabel} left`;
+  }
+  if (minutes === 0) {
+    return `~ ${hours} ${hrsLabel} left`;
+  }
+  return `~ ${hours} ${hrsLabel} ${minutes} ${minsLabel} left`;
+}
+
 function completeCards() {
 
+  const timeLeft = computeTimeLeft(DEFAULT_COMPLETION_PERCENT);
 
-  document.querySelector('#main > div.trailmix_header > div').querySelector('tds-content-header').shadowRoot.querySelector('.content-container').querySelector('th-tds-content-summary').shadowRoot.querySelector('th-tds-summary > th-tds-content-progress').shadowRoot.querySelector('.completion').querySelector('.completion__text').innerHTML = '<span class="completion__text"><span>~6 hrs 15 mins left • </span>83%</span>';
-  document.querySelector('#main > div.trailmix_header > div').querySelector('tds-content-header').shadowRoot.querySelector('.content-container').querySelector('th-tds-content-summary').shadowRoot.querySelector('th-tds-summary > th-tds-content-progress').shadowRoot.querySelector('.completion').querySelector('th-tds-progress-bar').shadowRoot.querySelector('.progress-bar.progress-bar--medium').querySelector('.progress-bar__value').style.width = '83%';
-  document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > span:nth-child(1) > span:nth-child(1)').innerText = '~ 6 hrs 15 mins left';
-  document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > span:nth-child(2)').innerText = '83 %';
-  document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div.slds-grid.slds-grid_align-center.slds-m-vertical_x-small > div > div > span').style.width = '83%';
+  document.querySelector('#main > div.trailmix_header > div').querySelector('tds-content-header').shadowRoot.querySelector('.content-container').querySelector('th-tds-content-summary').shadowRoot.querySelector('th-tds-summary > th-tds-content-progress').shadowRoot.querySelector('.completion').querySelector('.completion__text').innerHTML = `<span class="completion__text"><span>${timeLeft} • </span>${DEFAULT_COMPLETION_PERCENT}%</span>`;
+  document.querySelector('#main > div.trailmix_header > div').querySelector('tds-content-header').shadowRoot.querySelector('.content-container').querySelector('th-tds-content-summary').shadowRoot.querySelector('th-tds-summary > th-tds-content-progress').shadowRoot.querySelector('.completion').querySelector('th-tds-progress-bar').shadowRoot.querySelector('.progress-bar.progress-bar--medium').querySelector('.progress-bar__value').style.width = `${DEFAULT_COMPLETION_PERCENT}%`;
+  document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > span:nth-child(1) > span:nth-child(1)').innerText = timeLeft;
+  document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > span:nth-child(2)').innerText = `${DEFAULT_COMPLETION_PERCENT} %`;
+  document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div.slds-grid.slds-grid_align-center.slds-m-vertical_x-small > div > div > span').style.width = `${DEFAULT_COMPLETION_PERCENT}%`;
   const cards = document.querySelectorAll('.tds-content-panel_body');
   let modifiedCount = 0;
 
