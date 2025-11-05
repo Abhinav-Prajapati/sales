@@ -10,6 +10,10 @@ let totalModified = 0;
 const TOTAL_COURSE_HOURS = 40;
 const DEFAULT_COMPLETION_PERCENT = 84; // number 0-100
 
+// Profile page stats configuration
+const PROFILE_BADGES_COUNT = 24;     // Number of badges to display
+const PROFILE_POINTS_COUNT = 22012;  // Number of points to display
+
 // Exclusion list: module URLs that should NOT run the module completion code
 // Add module slugs (the part after /modules/) to this list
 const EXCLUDED_MODULES = [
@@ -20,6 +24,7 @@ const EXCLUDED_MODULES = [
 // Detect which page type we're on
 const currentURL = window.location.href;
 const isModulePage = currentURL.includes('trailhead.salesforce.com/content/learn/modules');
+const isProfilePage = currentURL.includes('www.salesforce.com/trailblazer/profile');
 
 // Check if current module is in the exclusion list
 function isExcludedModule() {
@@ -212,6 +217,41 @@ function completeModulePage() {
   }
 }
 
+// ========== PROFILE PAGE STATS UPDATE (for Trailblazer profile) ==========
+function updateProfileStats() {
+  // 1. Update badges count (first tally)
+  try {
+    const badgesTally = document.querySelector('#profile-sections-container > div:nth-child(3) > tbme-rank');
+    if (badgesTally && badgesTally.shadowRoot) {
+      const badgesCount = badgesTally.shadowRoot.querySelector('lwc-tds-theme-provider > lwc-tbui-card > div.stats-container > lwc-tbui-tally:nth-child(1)');
+      if (badgesCount && badgesCount.shadowRoot) {
+        const badgesSpan = badgesCount.shadowRoot.querySelector('span > span.tally__count.tally__count_success');
+        if (badgesSpan) {
+          badgesSpan.innerText = String(PROFILE_BADGES_COUNT);
+        }
+      }
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+
+  // 2. Update points count (second tally)
+  try {
+    const pointsTally = document.querySelector('#profile-sections-container > div:nth-child(3) > tbme-rank');
+    if (pointsTally && pointsTally.shadowRoot) {
+      const pointsCount = pointsTally.shadowRoot.querySelector('lwc-tds-theme-provider > lwc-tbui-card > div.stats-container > lwc-tbui-tally:nth-child(2)');
+      if (pointsCount && pointsCount.shadowRoot) {
+        const pointsSpan = pointsCount.shadowRoot.querySelector('span > span.tally__count.tally__count_success');
+        if (pointsSpan) {
+          pointsSpan.innerText = String(PROFILE_POINTS_COUNT);
+        }
+      }
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+}
+
 // ========== MAIN EXECUTION ROUTER ==========
 function completeCards() {
   // Skip module completion if the current module is excluded
@@ -220,7 +260,9 @@ function completeCards() {
     return;
   }
 
-  if (isModulePage) {
+  if (isProfilePage) {
+    updateProfileStats();
+  } else if (isModulePage) {
     completeModulePage();
   } else {
     completeTrailPage();
@@ -228,7 +270,7 @@ function completeCards() {
 }
 
 console.log(`Starting Trailhead Completion Script (runs every 300ms)...`);
-console.log(`Page type: ${isModulePage ? 'MODULE' : 'TRAIL'}`);
+console.log(`Page type: ${isProfilePage ? 'PROFILE' : isModulePage ? 'MODULE' : 'TRAIL'}`);
 if (isModulePage && isExcludedModule()) {
   console.log(`⚠️ This module is in the exclusion list - skipping completion modifications`);
 }

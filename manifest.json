@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Trailhead Module Finisher",
-  "version": "2.1",
+  "version": "2.2",
   "description": "Runs a script to mark modules and trails as complete on Trailhead pages.",
   "content_scripts": [
     {
       "matches": [
         "https://trailhead.salesforce.com/users/*/trailmixes/*",
-        "https://trailhead.salesforce.com/content/learn/*"
+        "https://trailhead.salesforce.com/content/learn/*",
+        "https://www.salesforce.com/trailblazer/profile"
       ],
       "js": [
         "content.js"
