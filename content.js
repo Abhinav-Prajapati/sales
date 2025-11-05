@@ -6,8 +6,27 @@
 let intervalId;
 let totalModified = 0;
 
+// Configuration constants
 const TOTAL_COURSE_HOURS = 40;
 const DEFAULT_COMPLETION_PERCENT = 84; // number 0-100
+
+// Exclusion list: module URLs that should NOT run the module completion code
+// Add module slugs (the part after /modules/) to this list
+const EXCLUDED_MODULES = [
+  'leads_opportunities_lightning_experience',
+  'apex_integration_services'
+];
+
+// Detect which page type we're on
+const currentURL = window.location.href;
+const isModulePage = currentURL.includes('trailhead.salesforce.com/content/learn/modules');
+
+// Check if current module is in the exclusion list
+function isExcludedModule() {
+  if (!isModulePage) return false;
+
+  return EXCLUDED_MODULES.some(slug => currentURL.includes(`/modules/${slug}`));
+}
 
 function computeTimeLeft(percent) {
   const remainingFraction = (100 - percent) / 100;
@@ -36,15 +55,22 @@ function computeTimeLeft(percent) {
   return `~ ${hours} ${hrsLabel} ${minutes} ${minsLabel} left`;
 }
 
-function completeCards() {
-
+// ========== TRAIL PAGE COMPLETION (for trail/trailmix pages) ==========
+function completeTrailPage() {
   const timeLeft = computeTimeLeft(DEFAULT_COMPLETION_PERCENT);
 
-  document.querySelector('#main > div.trailmix_header > div').querySelector('tds-content-header').shadowRoot.querySelector('.content-container').querySelector('th-tds-content-summary').shadowRoot.querySelector('th-tds-summary > th-tds-content-progress').shadowRoot.querySelector('.completion').querySelector('.completion__text').innerHTML = `<span class="completion__text"><span>${timeLeft} • </span>${DEFAULT_COMPLETION_PERCENT}%</span>`;
-  document.querySelector('#main > div.trailmix_header > div').querySelector('tds-content-header').shadowRoot.querySelector('.content-container').querySelector('th-tds-content-summary').shadowRoot.querySelector('th-tds-summary > th-tds-content-progress').shadowRoot.querySelector('.completion').querySelector('th-tds-progress-bar').shadowRoot.querySelector('.progress-bar.progress-bar--medium').querySelector('.progress-bar__value').style.width = `${DEFAULT_COMPLETION_PERCENT}%`;
-  document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > span:nth-child(1) > span:nth-child(1)').innerText = timeLeft;
-  document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > span:nth-child(2)').innerText = `${DEFAULT_COMPLETION_PERCENT} %`;
-  document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div.slds-grid.slds-grid_align-center.slds-m-vertical_x-small > div > div > span').style.width = `${DEFAULT_COMPLETION_PERCENT}%`;
+  // Update progress header in shadow DOM
+  try {
+    document.querySelector('#main > div.trailmix_header > div').querySelector('tds-content-header').shadowRoot.querySelector('.content-container').querySelector('th-tds-content-summary').shadowRoot.querySelector('th-tds-summary > th-tds-content-progress').shadowRoot.querySelector('.completion').querySelector('.completion__text').innerHTML = `<span class="completion__text"><span>${timeLeft} • </span>${DEFAULT_COMPLETION_PERCENT}%</span>`;
+    document.querySelector('#main > div.trailmix_header > div').querySelector('tds-content-header').shadowRoot.querySelector('.content-container').querySelector('th-tds-content-summary').shadowRoot.querySelector('th-tds-summary > th-tds-content-progress').shadowRoot.querySelector('.completion').querySelector('th-tds-progress-bar').shadowRoot.querySelector('.progress-bar.progress-bar--medium').querySelector('.progress-bar__value').style.width = `${DEFAULT_COMPLETION_PERCENT}%`;
+    document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > span:nth-child(1) > span:nth-child(1)').innerText = timeLeft;
+    document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > span:nth-child(2)').innerText = `${DEFAULT_COMPLETION_PERCENT} %`;
+    document.querySelector('#main > div.tds-bg_sand.slds-p-bottom_x-large.th-content-wrapper > div > div:nth-child(34) > div > div > div > div > div:nth-child(2) > div.slds-grid.slds-grid_align-center.slds-m-vertical_x-small > div > div > span').style.width = `${DEFAULT_COMPLETION_PERCENT}%`;
+  } catch (e) {
+    // Elements might not be present yet, silent fail
+  }
+
+  // Process cards
   const cards = document.querySelectorAll('.tds-content-panel_body');
   let modifiedCount = 0;
 
@@ -88,13 +114,124 @@ function completeCards() {
 
         modifiedCount++;
         totalModified++;
-        console.log(`Card marked as complete (Total: ${totalModified})`);
+        console.log(`Trail card marked as complete (Total: ${totalModified})`);
       }
     }
   });
 }
 
-console.log('Starting Trailhead Card Completion Script (runs every 300ms)...');
+// ========== MODULE PAGE COMPLETION (for module detail pages) ==========
+function completeModulePage() {
+  // 2. Update completion date
+  try {
+    const completionTarget = document.querySelector('#main > div.th-content-container > div.th-content-container_main > div:nth-child(3) > div > div > div > div:nth-child(2)');
+    if (completionTarget) {
+      completionTarget.innerHTML = '<div class="slds-m-top_x-small">Completed Oct 30, 2025</div>';
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+
+  // 3. Replace arrow icons with green ticks
+  try {
+    const greenTickHTML = `
+      <span class="slds-icon_container slds-icon_container_circle slds-icon-action-approval tds-bg_success">
+        <svg aria-hidden="true" class="slds-icon slds-icon_x-small">
+          <use href="/packs/media/svg/symbols-129cc9ff.svg#approval"></use>
+        </svg>
+        <span class="slds-assistive-text">Completed</span>
+      </span>`;
+
+    const arrowIcons = document.querySelectorAll('span.slds-icon-action-back');
+    arrowIcons.forEach((icon) => {
+      const parentDiv = icon.closest('.slds-text-align_right');
+      if (parentDiv) {
+        parentDiv.innerHTML = greenTickHTML;
+      }
+    });
+
+    if (arrowIcons.length > 0) {
+      console.log(`Replaced ${arrowIcons.length} arrow icons with green ticks.`);
+    }
+  } catch (e) {
+    // Elements may not exist, silent fail
+  }
+
+  // 4. Add first badge (aside tile)
+  try {
+    const badgeTarget1 = document.querySelector('#th-content-container_aside > div.th-content_aside-tile > div > div.th-content-card_badge-header.slds-grid.slds-grid_vertical-align-center > div.slds-grid.slds-grid_align-spread.slds-container_center.slds-container_x-large.slds-p-horizontal_large > div');
+    if (badgeTarget1 && !badgeTarget1.querySelector('.th-content-card_badge-image--completed')) {
+      const badgeHTML = `
+      <div class="th-content-card_badge-image--completed">
+        <span class="slds-icon_container slds-icon_container_circle slds-icon-action-check tds-bg_success slds-show">
+          <span class="slds-icon_container slds-icon-utility-check" style="" title="">
+            <svg aria-hidden="true" class="slds-icon slds-icon_x-small">
+              <use xlink:href="/assets/icons/utility-sprite/svg/symbols-e6382c2038036b01b4230804b934660723c3fa4f23aab0ef6bfce6541ad19590.svg#check" xmlns:xlink="http://www.w3.org/1999/xlink"></use>
+            </svg>
+          </span>
+        </span>
+      </div>`;
+      badgeTarget1.insertAdjacentHTML('beforeend', badgeHTML);
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+
+  // 5. Add second badge (main content area)
+  try {
+    const badgeTarget2 = document.querySelector('#main > div.th-content-container > div.th-content-container_main > div:nth-child(3) > div > div > div > div.slds-grid.slds-grid_align-center > div > div');
+    if (badgeTarget2 && !badgeTarget2.querySelector('.th-content-card_badge-image--completed')) {
+      const badgeHTML = `
+      <div class="th-content-card_badge-image--completed">
+        <span class="slds-icon_container slds-icon_container_circle slds-icon-action-check tds-bg_success slds-show">
+          <span class="slds-icon_container slds-icon-utility-check" style="" title="">
+            <svg aria-hidden="true" class="slds-icon slds-icon_x-small">
+              <use xlink:href="/assets/icons/utility-sprite/svg/symbols-e6382c2038036b01b4230804b934660723c3fa4f23aab0ef6bfce6541ad19590.svg#check" xmlns:xlink="http://www.w3.org/1999/xlink"></use>
+            </svg>
+          </span>
+        </span>
+      </div>`;
+      badgeTarget2.insertAdjacentHTML('beforeend', badgeHTML);
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+
+  // 6. Remove all <a> tags inside the aside tile container
+  try {
+    const asideTileContainer = document.querySelector('#th-content-container_aside > div.th-content_aside-tile > div > div.th-content-card_container.slds-container_center');
+    if (asideTileContainer) {
+      const allLinks = asideTileContainer.querySelectorAll('a');
+      allLinks.forEach(link => link.remove());
+      if (allLinks.length > 0) {
+        console.log(`Removed ${allLinks.length} <a> tags from aside tile container.`);
+      }
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+}
+
+// ========== MAIN EXECUTION ROUTER ==========
+function completeCards() {
+  // Skip module completion if the current module is excluded
+  if (isModulePage && isExcludedModule()) {
+    // Do nothing for excluded modules
+    return;
+  }
+
+  if (isModulePage) {
+    completeModulePage();
+  } else {
+    completeTrailPage();
+  }
+}
+
+console.log(`Starting Trailhead Completion Script (runs every 300ms)...`);
+console.log(`Page type: ${isModulePage ? 'MODULE' : 'TRAIL'}`);
+if (isModulePage && isExcludedModule()) {
+  console.log(`⚠️ This module is in the exclusion list - skipping completion modifications`);
+}
 console.log('To stop: clearInterval(intervalId)');
 intervalId = setInterval(completeCards, 300);
 

@@ -1,17 +1,18 @@
 {
   "manifest_version": 3,
   "name": "Trailhead Module Finisher",
-  "version": "2.0",
-  "description": "Runs a script to mark modules as complete on the Salesforce Developer Catalyst page.",
+  "version": "2.1",
+  "description": "Runs a script to mark modules and trails as complete on Trailhead pages.",
   "content_scripts": [
     {
       "matches": [
-        "https://trailhead.salesforce.com/users/trjha3/trailmixes/salesforce-developer-catalyst-v-3-0"
+        "https://trailhead.salesforce.com/users/*/trailmixes/*",
+        "https://trailhead.salesforce.com/content/learn/*"
       ],
       "js": [
         "content.js"
       ],
-      "run_at": "document_start"
+      "run_at": "document_idle"
     }
   ]
 }
