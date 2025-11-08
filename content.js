@@ -11,8 +11,8 @@ const TOTAL_COURSE_HOURS = 40;
 const DEFAULT_COMPLETION_PERCENT = 82; // number 0-100
 
 // Profile page stats configuration
-const PROFILE_BADGES_COUNT = 12;     // Number of badges to display
-const PROFILE_POINTS_COUNT = 12012;  // Number of points to display
+const PROFILE_BADGES_COUNT = 27;     // Number of badges to display
+const PROFILE_POINTS_COUNT = 28012;  // Number of points to display
 
 // Exclusion list: module URLs that should NOT run the module completion code
 // Add module slugs (the part after /modules/) to this list
@@ -147,6 +147,22 @@ function completeTrailPage() {
       }
     }
   });
+
+  // Update global navigation badge info
+  try {
+    const globalNav = document.querySelector('#global-nav');
+    if (globalNav && globalNav.shadowRoot) {
+      const loginElement = globalNav.shadowRoot.querySelector('div > header > div.c360-nav__header > div.c360-nav__wrapper > nav.container-utility.utility-nav.show > ul > li.utility-icons-items.login > div.desktop-login > hgf-c360login');
+      if (loginElement && loginElement.shadowRoot) {
+        const badgeInfo = loginElement.shadowRoot.querySelector('#login-auth-content > div > h4.section-title.trailhead-badge-info');
+        if (badgeInfo) {
+          badgeInfo.innerText = `"Explorer" · ${PROFILE_BADGES_COUNT} badges · ${PROFILE_POINTS_COUNT.toLocaleString()} points`;
+        }
+      }
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
 }
 
 // ========== MODULE PAGE COMPLETION (for module detail pages) ==========
@@ -328,6 +344,102 @@ function updateTodayPage() {
         const summaryHeading = aboutMe.shadowRoot.querySelector('th-tds-card > div > div.summary > div');
         if (summaryHeading) {
           summaryHeading.innerText = `You have ${PROFILE_POINTS_COUNT.toLocaleString()} points`;
+        }
+      }
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+
+  // 4. Update trailmixes progress percentage text
+  try {
+    const todayPage = document.querySelector('#main > thtoday-page');
+    if (todayPage && todayPage.shadowRoot) {
+      const trailmixesSection = todayPage.shadowRoot.querySelector('div.container > aside > div > #content_progress_trailmixes');
+      if (trailmixesSection && trailmixesSection.shadowRoot) {
+        const contentCollection = trailmixesSection.shadowRoot.querySelector('th-th-content-collection');
+        if (contentCollection && contentCollection.shadowRoot) {
+          const collectionCard = contentCollection.shadowRoot.querySelector('th-tds-content-collection-card');
+          if (collectionCard) {
+            const collectionItem = collectionCard.querySelector('th-tds-content-collection-card > th-tds-content-collection-item');
+            if (collectionItem && collectionItem.shadowRoot) {
+              const contentSummary = collectionItem.shadowRoot.querySelector('article > th-tds-content-summary');
+              if (contentSummary && contentSummary.shadowRoot) {
+                const summary = contentSummary.shadowRoot.querySelector('th-tds-summary');
+                if (summary) {
+                  const contentProgress = summary.querySelector('th-tds-summary > th-tds-content-progress');
+                  if (contentProgress && contentProgress.shadowRoot) {
+                    const percentSpan = contentProgress.shadowRoot.querySelector('span > span');
+                    if (percentSpan) {
+                      percentSpan.innerText = `${DEFAULT_COMPLETION_PERCENT}%`;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+
+  // 5. Update trailmixes progress bar width
+  try {
+    const todayPage = document.querySelector('#main > thtoday-page');
+    if (todayPage && todayPage.shadowRoot) {
+      const trailmixesSection = todayPage.shadowRoot.querySelector('div.container > aside > div > #content_progress_trailmixes');
+      if (trailmixesSection && trailmixesSection.shadowRoot) {
+        const contentCollection = trailmixesSection.shadowRoot.querySelector('th-th-content-collection');
+        if (contentCollection && contentCollection.shadowRoot) {
+          const collectionCard = contentCollection.shadowRoot.querySelector('th-tds-content-collection-card');
+          if (collectionCard) {
+            const collectionItem = collectionCard.querySelector('th-tds-content-collection-card > th-tds-content-collection-item');
+            if (collectionItem && collectionItem.shadowRoot) {
+              const contentSummary = collectionItem.shadowRoot.querySelector('article > th-tds-content-summary');
+              if (contentSummary && contentSummary.shadowRoot) {
+                const summary = contentSummary.shadowRoot.querySelector('th-tds-summary');
+                if (summary) {
+                  const contentProgress = summary.querySelector('th-tds-summary > th-tds-content-progress');
+                  if (contentProgress && contentProgress.shadowRoot) {
+                    const progressBar = contentProgress.shadowRoot.querySelector('span > th-tds-progress-bar');
+                    if (progressBar && progressBar.shadowRoot) {
+                      const progressDiv = progressBar.shadowRoot.querySelector('div');
+                      if (progressDiv) {
+                        progressDiv.style.setProperty('--progress-min-width', '5rem');
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+
+  // 6. Update "Jump Back In" heading text
+  try {
+    const todayPage = document.querySelector('#main > thtoday-page');
+    if (todayPage && todayPage.shadowRoot) {
+      const jumpBackIn = todayPage.shadowRoot.querySelector('#jump-back-in');
+      if (jumpBackIn && jumpBackIn.shadowRoot) {
+        const collectionItem = jumpBackIn.shadowRoot.querySelector('th-tds-card > th-tds-content-collection-item');
+        if (collectionItem && collectionItem.shadowRoot) {
+          const contentSummary = collectionItem.shadowRoot.querySelector('article > th-tds-content-summary');
+          if (contentSummary && contentSummary.shadowRoot) {
+            const summary = contentSummary.shadowRoot.querySelector('th-tds-summary');
+            if (summary && summary.shadowRoot) {
+              const truncateElement = summary.shadowRoot.querySelector('div > div.body > div.content > th-tds-heading > a > th-tds-truncate');
+              if (truncateElement) {
+                truncateElement.innerText = 'Developer intermediate';
+              }
+            }
+          }
         }
       }
     }
