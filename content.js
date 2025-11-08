@@ -8,17 +8,19 @@ let totalModified = 0;
 
 // Configuration constants
 const TOTAL_COURSE_HOURS = 40;
-const DEFAULT_COMPLETION_PERCENT = 84; // number 0-100
+const DEFAULT_COMPLETION_PERCENT = 82; // number 0-100
 
 // Profile page stats configuration
-const PROFILE_BADGES_COUNT = 24;     // Number of badges to display
-const PROFILE_POINTS_COUNT = 22012;  // Number of points to display
+const PROFILE_BADGES_COUNT = 12;     // Number of badges to display
+const PROFILE_POINTS_COUNT = 12012;  // Number of points to display
 
 // Exclusion list: module URLs that should NOT run the module completion code
 // Add module slugs (the part after /modules/) to this list
 const EXCLUDED_MODULES = [
   'leads_opportunities_lightning_experience',
-  'apex_integration_services'
+  'apex_integration_services',
+  'lex_customization',
+  'Lightning Experience Customization'
 ];
 
 // Detect which page type we're on
@@ -60,8 +62,29 @@ function computeTimeLeft(percent) {
   return `~ ${hours} ${hrsLabel} ${minutes} ${minsLabel} left`;
 }
 
+// Check if the "Sign Up" button is present (indicates user not logged in)
+function isSignUpButtonPresent() {
+  try {
+    const contextnav = document.querySelector('#contextnav');
+    if (contextnav && contextnav.shadowRoot) {
+      const signUpButton = contextnav.shadowRoot.querySelector('div > div.contextnav > div.contextnav__header > div.contextnav__wrapper > nav.contextnav__ctas > div.contextnav__ctas-button-container.cta-primary > hgf-button');
+      if (signUpButton && signUpButton.innerHTML.includes('Sign Up')) {
+        return true;
+      }
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+  return false;
+}
+
 // ========== TRAIL PAGE COMPLETION (for trail/trailmix pages) ==========
 function completeTrailPage() {
+  // Skip if Sign Up button is present (user not logged in)
+  if (isSignUpButtonPresent()) {
+    return;
+  }
+
   const timeLeft = computeTimeLeft(DEFAULT_COMPLETION_PERCENT);
 
   // Update progress header in shadow DOM
@@ -273,6 +296,9 @@ console.log(`Starting Trailhead Completion Script (runs every 300ms)...`);
 console.log(`Page type: ${isProfilePage ? 'PROFILE' : isModulePage ? 'MODULE' : 'TRAIL'}`);
 if (isModulePage && isExcludedModule()) {
   console.log(`⚠️ This module is in the exclusion list - skipping completion modifications`);
+}
+if (!isModulePage && !isProfilePage && isSignUpButtonPresent()) {
+  console.log(`⚠️ Sign Up button detected - user not logged in, skipping trail modifications`);
 }
 console.log('To stop: clearInterval(intervalId)');
 intervalId = setInterval(completeCards, 300);
