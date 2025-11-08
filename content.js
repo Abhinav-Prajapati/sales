@@ -27,6 +27,7 @@ const EXCLUDED_MODULES = [
 const currentURL = window.location.href;
 const isModulePage = currentURL.includes('trailhead.salesforce.com/content/learn/modules');
 const isProfilePage = currentURL.includes('www.salesforce.com/trailblazer/profile');
+const isTodayPage = currentURL.includes('trailhead.salesforce.com/today');
 
 // Check if current module is in the exclusion list
 function isExcludedModule() {
@@ -275,6 +276,66 @@ function updateProfileStats() {
   }
 }
 
+// ========== TODAY PAGE UPDATE (for Trailhead Today page) ==========
+function updateTodayPage() {
+  // 1. Update completion percentage text in "Jump Back In" section
+  try {
+    const todayPage = document.querySelector('#main > thtoday-page');
+    if (todayPage && todayPage.shadowRoot) {
+      const jumpBackIn = todayPage.shadowRoot.querySelector('#jump-back-in');
+      if (jumpBackIn && jumpBackIn.shadowRoot) {
+        const progressElement = jumpBackIn.shadowRoot.querySelector('th-tds-card > th-tds-content-collection-item > div > div > th-tds-content-progress');
+        if (progressElement && progressElement.shadowRoot) {
+          const percentSpan = progressElement.shadowRoot.querySelector('span > span');
+          if (percentSpan) {
+            percentSpan.innerText = `${DEFAULT_COMPLETION_PERCENT}%`;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+
+  // 2. Update progress bar width in "Jump Back In" section
+  try {
+    const todayPage = document.querySelector('#main > thtoday-page');
+    if (todayPage && todayPage.shadowRoot) {
+      const jumpBackIn = todayPage.shadowRoot.querySelector('#jump-back-in');
+      if (jumpBackIn && jumpBackIn.shadowRoot) {
+        const progressElement = jumpBackIn.shadowRoot.querySelector('th-tds-card > th-tds-content-collection-item > div > div > th-tds-content-progress');
+        if (progressElement && progressElement.shadowRoot) {
+          const progressBar = progressElement.shadowRoot.querySelector('span > th-tds-progress-bar');
+          if (progressBar && progressBar.shadowRoot) {
+            const progressDiv = progressBar.shadowRoot.querySelector('div');
+            if (progressDiv) {
+              progressDiv.style.setProperty('--progress-min-width', '5.5em');
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+
+  // 3. Update points count in "About Me" section
+  try {
+    const todayPage = document.querySelector('#main > thtoday-page');
+    if (todayPage && todayPage.shadowRoot) {
+      const aboutMe = todayPage.shadowRoot.querySelector('#about-me');
+      if (aboutMe && aboutMe.shadowRoot) {
+        const summaryHeading = aboutMe.shadowRoot.querySelector('th-tds-card > div > div.summary > div');
+        if (summaryHeading) {
+          summaryHeading.innerText = `You have ${PROFILE_POINTS_COUNT.toLocaleString()} points`;
+        }
+      }
+    }
+  } catch (e) {
+    // Element may not exist, silent fail
+  }
+}
+
 // ========== MAIN EXECUTION ROUTER ==========
 function completeCards() {
   // Skip module completion if the current module is excluded
@@ -283,7 +344,9 @@ function completeCards() {
     return;
   }
 
-  if (isProfilePage) {
+  if (isTodayPage) {
+    updateTodayPage();
+  } else if (isProfilePage) {
     updateProfileStats();
   } else if (isModulePage) {
     completeModulePage();
@@ -293,11 +356,11 @@ function completeCards() {
 }
 
 console.log(`Starting Trailhead Completion Script (runs every 300ms)...`);
-console.log(`Page type: ${isProfilePage ? 'PROFILE' : isModulePage ? 'MODULE' : 'TRAIL'}`);
+console.log(`Page type: ${isTodayPage ? 'TODAY' : isProfilePage ? 'PROFILE' : isModulePage ? 'MODULE' : 'TRAIL'}`);
 if (isModulePage && isExcludedModule()) {
   console.log(`⚠️ This module is in the exclusion list - skipping completion modifications`);
 }
-if (!isModulePage && !isProfilePage && isSignUpButtonPresent()) {
+if (!isModulePage && !isProfilePage && !isTodayPage && isSignUpButtonPresent()) {
   console.log(`⚠️ Sign Up button detected - user not logged in, skipping trail modifications`);
 }
 console.log('To stop: clearInterval(intervalId)');
